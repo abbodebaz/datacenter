@@ -1,0 +1,20 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "QgsiHFaZWvAjhyD5V4FPn"
+uri = "file://decorative_module_docs.md"
+type = "text"
+title = "شرح موديول توليد الصور الديكورية"
+
+[[outputs]]
+id = "pjgu0b2OHLGKy8mkkQcaZ"
+uri = "file://mobile_app_api.md"
+type = "text"
+title = "APIs تطبيق الجوال — كتالوج الزوار"
+
+[[outputs]]
+id = "jGBwAUM9wpugXJps9JrXa"
+uri = "file://railway_env_vars.txt"
+type = "text"
+title = "متغيرات البيئة لـ Railway"

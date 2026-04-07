@@ -1,0 +1,8 @@
+
+# Replit workspace files (contain secrets)
+.replit
+replit.nix
+.env
+*.env
+railway_env_vars*.txt
+attached_assets/

@@ -1,0 +1,283 @@
+# Bayt Alebaa — Brand Guidelines
+## بيت الإباء | دليل الهوية البصرية
+
+---
+
+## 1. Brand Overview | نظرة عامة
+
+**Company:** Bayt Alebaa (بيت الإباء)  
+**Project:** مركز بيانات المنتجات والصور — Product Data Center  
+**Industry:** Building Materials & Interior Design  
+**Product Divisions:** السيراميك والبورسلان · الرخام · الأدوات الصحية · المطابخ · الديكور · المواد المساندة  
+**Target Users:** العملاء · مندوبو المبيعات · مدراء الأقسام · فريق التسويق · Super Admin  
+**Platform Direction:** RTL-first (Arabic) · Responsive · Professional
+
+---
+
+## 2. Platform Identity
+
+المنصة تخدم **5 أدوار مختلفة** بصلاحيات متفاوتة، لذا يجب أن تكون الهوية البصرية:
+- **احترافية** للإدارة والمبيعات
+- **واضحة وسريعة** لمندوبي المبيعات الميدانيين
+- **جذابة** للعملاء في واجهة الكتالوج العام
+- **دقيقة** لعرض السمات التقنية (مقاسات، PEI، R-Value...)
+
+---
+
+## 3. Color Palette | الألوان
+
+### Primary Colors
+| Name | HEX | Usage |
+|------|-----|-------|
+| Deep Charcoal | `#1C1C2E` | Headers, sidebars, primary text |
+| Ivory White | `#F7F4EF` | Main backgrounds, cards |
+| Warm Gold | `#C8A84B` | CTAs, active states, highlights, brand accent |
+
+### Secondary Colors
+| Name | HEX | Usage |
+|------|-----|-------|
+| Slate Blue | `#2B3A67` | Navigation, secondary buttons |
+| Warm Gray | `#8A8A8A` | Body text, placeholders |
+| Light Cream | `#FAF8F4` | Section backgrounds |
+| Soft Sand | `#E5DDD0` | Borders, dividers, card borders |
+
+### Status Colors (used in approval workflow & product status)
+| Name | HEX | Status |
+|------|-----|--------|
+| Active Green | `#2E7D5A` | نشط — منتج منشور |
+| Pending Amber | `#D4820A` | قيد المراجعة |
+| Draft Gray | `#6B7280` | مسودة |
+| Inactive Red | `#B91C1C` | موقوف / منتهي |
+
+### Product Inventory Type Colors
+| Type | Color | HEX |
+|------|-------|-----|
+| دوري | Blue | `#1D4ED8` |
+| ستوك | Green | `#15803D` |
+| منتهي | Red | `#991B1B` |
+
+---
+
+## 4. Typography | الخطوط
+
+### Arabic (Primary — RTL)
+- **Display / H1:** IBM Plex Arabic — Bold (700)
+- **Body / Labels:** IBM Plex Arabic — Regular (400) / Medium (500)
+- **Technical Data:** Noto Sans Arabic — fits dense data tables (SKU, specs)
+
+### Latin (Secondary — for technical terms, API routes, code)
+- **Display:** Playfair Display — Bold/Italic (for marketing headers)
+- **UI / Data:** Inter — Medium/Regular (for tables, forms, data)
+- **Code / SKU:** JetBrains Mono — for SKU codes, API paths, technical values
+
+### Type Scale
+| Level | Size | Weight | Arabic Usage |
+|-------|------|--------|-------------|
+| H1 | 40px | 700 | عنوان الصفحة |
+| H2 | 28px | 600 | عنوان القسم |
+| H3 | 20px | 600 | عنوان البطاقة |
+| Body | 15px | 400 | المحتوى الرئيسي |
+| Small | 12px | 400 | التسميات، الحالات |
+| Mono | 13px | 500 | SKU، قيم تقنية |
+
+---
+
+## 5. Spacing & Layout | التخطيط
+
+### Grid System
+- **Base unit:** 8px
+- **Columns:** 12-column (desktop), 4-column (mobile)
+- **Gutters:** 24px (desktop), 16px (tablet), 12px (mobile)
+- **Max content width:** 1440px
+- **Sidebar width:** 260px (desktop)
+
+### Border Radius
+| Element | Radius |
+|---------|--------|
+| Product Cards | 12px |
+| Buttons | 8px |
+| Inputs / Selects | 6px |
+| Status Badges | 4px |
+| Modals | 16px |
+
+### Elevation / Shadows
+```css
+--shadow-sm:   0 1px 3px rgba(28,28,46,0.06);
+--shadow-md:   0 4px 16px rgba(28,28,46,0.10);
+--shadow-lg:   0 12px 40px rgba(28,28,46,0.14);
+--shadow-gold: 0 4px 20px rgba(200,168,75,0.30);
+```
+
+---
+
+## 6. Components | المكونات
+
+### Product Card
+- Image ratio: 4:3 (listing) · 1:1 (main card)
+- On hover: scale 1.02 + shadow-lg + gold border-top
+- Skeleton loading: shimmer animation (RTL-aware, right-to-left)
+- Required display: اسم المنتج · SKU (Mono font) · القسم · Status Badge · زر التفاصيل
+
+### Status Badges
+| Status | Background | Text Color |
+|--------|------------|-----------|
+| نشط | `#DCFCE7` | `#15803D` |
+| قيد المراجعة | `#FEF3C7` | `#D97706` |
+| مسودة | `#F3F4F6` | `#6B7280` |
+| موقوف | `#FEE2E2` | `#DC2626` |
+| منتهي | `#FEF2F2` | `#991B1B` |
+
+### Buttons
+- **Primary:** Gold `#C8A84B` bg + dark text + 8px radius
+- **Secondary:** Transparent + Gold border + Gold text
+- **Danger:** `#B91C1C` bg + white text
+- **Ghost:** Transparent + Slate border + Slate text
+- **Padding:** `12px 24px` default · `8px 16px` small
+
+### Data Tables (product management screen)
+- Header bg: `#F7F4EF` · text: `#2B3A67` · weight: 600
+- Row hover: `#FAF8F4`
+- Dividers: 1px `#E5DDD0`
+- Row height: 48px (compact density)
+- Sticky column: اسم المنتج / SKU
+
+### Dynamic Attribute Forms
+- Each category (قسم) has its own set of fields — rendered dynamically
+- Label: 13px · `#2B3A67` · uppercase
+- Input focus: Gold border + subtle gold glow
+- Error: Red `#B91C1C` border + message below in Arabic
+- Group fields per category with a visual separator and category label
+
+---
+
+## 7. Iconography | الأيقونات
+
+- **Library:** Lucide Icons (matches React/TS stack)
+- **Style:** Outline, 1.5px stroke
+- **Sizes:** 16px (inline) · 20px (buttons) · 24px (navigation)
+
+### Key Icons by Feature
+| Feature | Lucide Icon |
+|---------|------------|
+| كتالوج المنتجات | `LayoutGrid` |
+| إضافة منتج | `PlusCircle` |
+| توليد كتالوج PDF | `FileDown` |
+| صور ديكورية AI | `Sparkles` |
+| التحليلات | `BarChart2` |
+| ربط SAP | `Link2` |
+| إدارة المستخدمين | `Users` |
+| الصلاحيات | `Shield` |
+| لوحة الموافقات | `CheckSquare` |
+| سجل العمليات | `ScrollText` |
+| رفع صورة | `Upload` |
+| Cloudflare R2 | `Cloud` |
+
+---
+
+## 8. Image Display Standards | معايير عرض الصور
+
+المتطلبات الرسمية من وثيقة المشروع:
+
+| المعيار | المتطلب |
+|--------|---------|
+| الأبعاد | 2000×2000px مربعة (إلزامي) |
+| الصيغ المقبولة | JPG · JPEG · PNG · WebP |
+| الحجم الأقصى | 10 MB للصورة الواحدة |
+| الخلفية | أبيض أو رمادي فاتح `#F5F5F5` |
+| الإضاءة | موحدة بدون ظلال قاسية |
+| الجودة | لا تقل عن 72 DPI |
+| التسمية | `SKU_ProductName_ViewType.jpg` |
+
+### Image Types Per Product
+| Type | Description | Display Ratio |
+|------|-------------|---------------|
+| Main | الصورة الأمامية — إلزامية | 1:1 |
+| Gallery | حتى 8 صور من زوايا مختلفة | 4:3 |
+| Detail | تصوير الملمس والتفاصيل الدقيقة | 1:1 |
+| Lifestyle | المنتج في بيئة واقعية — تُولَّد بالـ AI | 16:9 |
+| Technical | مخطط الأبعاد — PDF/SVG مقبول | Fit |
+
+### Storage Structure (Cloudflare R2)
+```
+products/{category_slug}/{sku}/main.jpg
+products/{category_slug}/{sku}/gallery/01..08.jpg
+products/{category_slug}/{sku}/detail/texture.jpg
+products/{category_slug}/{sku}/lifestyle/room_01.jpg
+products/{category_slug}/{sku}/technical/dimensions.pdf
+```
+
+---
+
+## 9. Main Screens | الشاشات الرئيسية
+
+الشاشات الرسمية من وثيقة المشروع (القسم 5.2):
+
+| الشاشة | الوصف | الأدوار |
+|--------|-------|---------|
+| لوحة التحكم الرئيسية | إحصاءات، منبهات الاكتمال | الجميع |
+| كتالوج المنتجات | Grid + List · فلاتر · بحث فوري | الجميع |
+| صفحة تفاصيل المنتج | معرض صور · مواصفات ديناميكية · زر الشراء | الجميع |
+| إدارة المنتجات | جدول كامل · إجراءات جماعية · تصدير | مدير قسم + Admin |
+| نموذج إضافة/تعديل | حقول ديناميكية حسب القسم · رفع متعدد للصور | مدير قسم + Admin |
+| إدارة المستخدمين | قائمة · أدوار · نشاط المستخدم | Super Admin |
+| تقارير الاكتمال | نسبة اكتمال البيانات · المنتجات الناقصة | مدير قسم + Admin |
+| لوحة الموافقات | طلبات إضافة منتجات جديدة · مراجعة · اعتماد | Super Admin |
+| سجل العمليات | جميع التعديلات والأحداث (Log) | Super Admin |
+
+---
+
+## 10. Role-Based UI Rules | الواجهة حسب الدور
+
+من مصفوفة الصلاحيات في الوثيقة:
+
+| العنصر | عام | مبيعات | مدير قسم | تسويق | Super Admin |
+|--------|-----|--------|----------|-------|------------|
+| زر "إضافة منتج" | مخفي | مخفي | ظاهر | مخفي | ظاهر |
+| زر "نشر المنتج" | مخفي | مخفي | مخفي | مخفي | ظاهر |
+| زر "توليد كتالوج" | مخفي | ظاهر | ظاهر | ظاهر | ظاهر |
+| تبويب "إدارة المستخدمين" | مخفي | مخفي | مخفي | مخفي | ظاهر |
+| تبويب "التقارير" | مخفي | مخفي | ظاهر | مخفي | ظاهر |
+
+> ملاحظة: «مدير القسم» يرى ويدير منتجات قسمه فقط — عزل بصري تام عن الأقسام الأخرى
+
+---
+
+## 11. Motion & Animation | الحركة
+
+```css
+--transition-fast: 150ms ease;
+--transition-base: 200ms ease;
+--transition-slow: 350ms cubic-bezier(0.4, 0, 0.2, 1);
+```
+
+- **Page load:** Fade-in + upward slide 16px · staggered per section
+- **Cards:** scale 1.0 → 1.02 on hover
+- **Modals:** fade + scale 0.96 → 1.0
+- **Skeleton:** shimmer من اليمين لليسار (RTL)
+- **Sidebar collapse:** slide transition 250ms
+
+---
+
+## 12. RTL Support | دعم العربية
+
+- Default `dir="rtl"` on `<html lang="ar">`
+- CSS logical properties throughout: `margin-inline-start` لا `margin-left`
+- Icons with direction: مرآة في RTL (arrows, chevrons)
+- Animations: enter from right in RTL
+- Font loading: Arabic fonts preloaded before Latin fallbacks
+- Forms: text inputs `text-align: right`
+
+---
+
+## 13. Performance Guidelines | الأداء
+
+من متطلبات الوثيقة (القسم 2.3):
+- API response time: لا يتجاوز **300ms** للعمليات العادية
+- Concurrent users: يدعم **200 مستخدم متزامن** في المرحلة الأولى
+- Lazy loading: إلزامي لجميع صور المنتجات
+- Skeleton Screens: أثناء تحميل البيانات
+- Pagination: `page_size=24` افتراضي
+
+---
+
+*تاريخ الإعداد: فبراير 2025 | إدارة تقنية المعلومات — قسم التطوير والتحول الرقمي | شركة بيت الإباء*

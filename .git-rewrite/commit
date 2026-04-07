@@ -1,0 +1,15 @@
+tree a7d637c2c2a3e415b75bcbc8c4580967f9982876
+parent 2f67afbee18fa1972694dfa0aaefdf3bdb3b60e2
+author abodebaz <41914735-abodebaz@users.noreply.replit.com> 1774518631 +0000
+committer abodebaz <41914735-abodebaz@users.noreply.replit.com> 1774518631 +0000
+
+Add documentation explaining the decorative image generation module
+
+Creates decorative_module_docs.md detailing the module's purpose, components, technologies, and step-by-step workflow, and registers it in agent_assets_metadata.toml.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: 8fea81db-d3be-44b4-8946-3ad2e59f532b
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: 04406473-4f25-4276-91f5-ecb97065b63a
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/1baea5eb-9ea3-49a1-a797-514420bef7ee/8fea81db-d3be-44b4-8946-3ad2e59f532b/CQYhhlf
+Replit-Helium-Checkpoint-Created: true

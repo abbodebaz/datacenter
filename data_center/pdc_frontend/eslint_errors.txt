@@ -1,0 +1,37 @@
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/components/Layout/Layout.tsx
+  6:32  error  'FileDown' is defined but never used  @typescript-eslint/no-unused-vars
+  7:37  error  'Shield' is defined but never used    @typescript-eslint/no-unused-vars
+  8:11  error  'X' is defined but never used         @typescript-eslint/no-unused-vars
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/Dashboard/DashboardPage.tsx
+  12:50  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/Login/LoginPage.tsx
+  28:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/ProductCatalog/ProductCatalogPage.tsx
+  120:93  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/ProductDetail/ProductDetailPage.tsx
+   8:48  error  'Globe' is defined but never used         @typescript-eslint/no-unused-vars
+  40:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:19  error  'res' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/ProductForm/ProductFormPage.tsx
+  18:53  error    Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+  58:11  warning  The 'categories' logical expression could make the dependencies of useEffect Hook (at line 70) change on every render. To fix this, wrap the initialization of 'categories' in its own useMemo() Hook  react-hooks/exhaustive-deps
+  72:38  error    Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+  85:24  error    Unexpected any. Specify a different type                                                                                                                                                               @typescript-eslint/no-explicit-any
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/ProductManagement/ProductManagementPage.tsx
+   6:20  error  'useMutation' is defined but never used  @typescript-eslint/no-unused-vars
+   8:28  error  'Trash2' is defined but never used       @typescript-eslint/no-unused-vars
+  11:10  error  'toast' is defined but never used        @typescript-eslint/no-unused-vars
+  22:11  error  'qc' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+/Users/mac/Downloads/data_center/pdc_frontend/src/pages/UserManagement/UserManagementPage.tsx
+  22:12  error  'showForm' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+✖ 18 problems (17 errors, 1 warning)
+

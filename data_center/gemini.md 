@@ -1,0 +1,570 @@
+# Gemini AI Integration — Prompt Configuration
+## بيت الإباء | إعدادات نماذج الذكاء الاصطناعي
+
+---
+
+## Overview | نظرة عامة
+
+هذا الملف يحتوي على جميع البرومتات المستخدمة مع **Gemini API** في منصة مركز بيانات المنتجات.  
+المنصة مبنية على **Python + Django + DRF** في الـ Backend و **React + TypeScript** في الـ Frontend.  
+جميع طلبات AI تُعالَج عبر **Celery Queue** لتجنب تعطيل الـ API الرئيسي.  
+النتائج تُخزَّن في **Cloudflare R2** وتُعرَض للمراجعة قبل النشر.
+
+**Models Used:**
+- `gemini-2.0-flash` — Fast tasks (classification, validation, JSON output)
+- `gemini-2.0-flash` (creative, temp=0.8) — Descriptions, image prompts
+- `gemini-2.0-flash` (vision) — Image analysis
+
+---
+
+## API Configuration | إعدادات الـ API
+
+```python
+# Django settings — integrations/config.py
+
+GEMINI_CONFIG = {
+    "flash": {
+        "model": "gemini-2.0-flash",
+        "temperature": 0.3,
+        "max_output_tokens": 1024,
+    },
+    "creative": {
+        "model": "gemini-2.0-flash",
+        "temperature": 0.8,
+        "max_output_tokens": 512,
+    },
+    "vision": {
+        "model": "gemini-2.0-flash",
+        "temperature": 0.2,
+        "max_output_tokens": 512,
+    },
+}
+
+# Rate limiting (from performance requirements)
+GEMINI_RATE_LIMIT = 10          # requests per user per minute
+GEMINI_CONCURRENT_AI_JOBS = 5   # max concurrent Celery AI tasks
+```
+
+---
+
+## 1. Decorative Image Generation Prompt
+### توليد صور ديكورية واقعية — الميزة 4 من الوثيقة
+
+**Trigger:** زر "توليد صورة ديكورية" في صفحة تفاصيل المنتج  
+**Processing:** Celery Queue → Stable Diffusion API أو Midjourney API  
+**Storage:** `products/{category_slug}/{sku}/lifestyle/room_01.jpg` في Cloudflare R2  
+**Review:** تُعرَض للمراجعة قبل النشر
+
+```python
+# integrations/ai_prompts.py
+
+DECORATIVE_IMAGE_SYSTEM = """
+You are a professional interior design visualization expert specializing in 
+Saudi Arabian and Gulf-region residential interiors. You generate photorealistic 
+interior scene descriptions for product placement.
+"""
+
+DECORATIVE_IMAGE_USER = """
+You are given a product from Bayt Alebaa, a premium building materials company in Saudi Arabia.
+
+Product Details:
+- Product Name: {product_name_ar} / {product_name_en}
+- Category: {category}
+- SKU: {sku}
+- Dimensions: {dimensions}
+- Color/Finish: {color_finish}
+- Material: {material}
+- Aesthetic Style: {aesthetic_style}
+
+Task:
+Generate a detailed image generation prompt that will place this product in a realistic, 
+luxurious interior setting appropriate for Saudi/Gulf residential design.
+
+Requirements:
+1. Room style: premium and aspirational — modern Arabic luxury or contemporary Gulf aesthetic
+2. Lighting: warm, natural, photorealistic (golden hour or soft diffused daylight)
+3. Product placement: the HERO element — prominently placed and clearly visible
+4. Complementary décor: matches the product's style without overpowering it
+5. Camera angle: eye-level or slight elevation, wide enough to show context
+6. Quality markers: 8K, photorealistic, architectural visualization, interior photography
+
+Room Assignment by Category:
+- سيراميك / بورسلان → living room floor, entrance hall, or open-plan kitchen
+- رخام → grand entrance, feature wall, bathroom countertop, or dining area
+- أدوات صحية → master bathroom, luxury en-suite
+- مطابخ → full kitchen scene, breakfast nook
+- ديكور → living room accent wall, corridor, or lounge area
+- مواد مساندة → construction context, material closeup in situ
+
+Output: Return ONLY the image generation prompt as a single paragraph.
+No explanations, no JSON, no markdown. Max 200 words.
+"""
+```
+
+---
+
+## 2. Product Image Analysis (Vision)
+### استخراج بيانات المنتج من الصورة — عند رفع صورة في "إضافة منتج"
+
+**Trigger:** رفع صورة في نموذج إضافة المنتج (دورة الموافقة)  
+**Django App:** `images` app  
+**Output:** يُعبئ الحقول الديناميكية تلقائياً مساعدةً للمستخدم
+
+```python
+VISION_SYSTEM = """
+You are a product data specialist for a building materials company in Saudi Arabia. 
+You analyze product images and extract structured metadata.
+"""
+
+VISION_USER = """
+Analyze this product image from Bayt Alebaa, a Saudi building materials company.
+
+Extract the following information if visible or inferable:
+
+Respond ONLY with valid JSON — no preamble, no markdown, no explanation:
+
+{
+  "product_category": "one of: سيراميك, بورسلان, رخام, أدوات صحية, مطابخ, ديكور, مواد مساندة",
+  "color_family": "primary color in Arabic",
+  "finish_type": "مط | لامع | نصف لامع | أنتيك | نانو | مُزخرف",
+  "pattern_description": "brief Arabic description of pattern/texture",
+  "suggested_use": "أرضيات | جدران | حمامات | مطابخ | خارجي | داخلي",
+  "aesthetic_style": "كلاسيك | عصري | صناعي | طبيعي | فاخر | مينيمال",
+  "inventory_type": "دوري | ستوك | منتهي | null",
+  "confidence": "high | medium | low"
+}
+
+Rules:
+- Use Arabic for all descriptive fields
+- Do NOT guess dimensions or prices — omit them
+- If a field cannot be determined from the image, use null
+"""
+```
+
+---
+
+## 3. Arabic Product Description Generator
+### توليد وصف احترافي عربي — زر "توليد وصف" في نموذج التعديل
+
+**Trigger:** زر "توليد وصف" في product edit form  
+**Django App:** `products` app — `generate_description` service  
+**Output:** يُملأ في حقل `description_ar`
+
+```python
+DESCRIPTION_SYSTEM = """
+You are a professional Arabic copywriter specializing in luxury building materials 
+and interior design products for the Saudi and Gulf market.
+"""
+
+DESCRIPTION_USER = """
+Write a professional Arabic product description for this building material product.
+
+Product Data:
+- Name (AR): {product_name_ar}
+- Name (EN): {product_name_en}
+- Category: {category}
+- SKU: {sku}
+- Material: {material}
+- Color/Finish: {color_finish}
+- Dimensions: {dimensions}
+- Suggested Use: {suggested_use}
+- Style: {aesthetic_style}
+- Brand/Origin: {brand} — {origin_country}
+
+Requirements:
+1. Language: Modern Standard Arabic (فصحى معاصرة) — professional yet approachable
+2. Length: 60–90 words only
+3. Structure: Opening statement → Key properties → Ideal use case → Aspirational closing
+4. Tone: Refined, confident, luxury-oriented
+5. Mention the product name at least once
+6. Do NOT mention pricing, availability, or competitor names
+7. Avoid clichés: "أفضل جودة" / "الأفضل في السوق"
+
+Output: Return ONLY the Arabic description paragraph. No labels, no JSON.
+"""
+```
+
+---
+
+## 4. Background Removal & Image Enhancement
+### تحسين صور المنتجات — الميزة 5 من الوثيقة (الذكاء الاصطناعي)
+
+**Services (from document section 9.3):**
+- Background removal: `Remove.bg API` أو `rembg` (محلي)
+- Image enhancement: brightness/contrast/sharpening
+
+```python
+# This prompt is used to validate/describe the enhanced image after processing
+IMAGE_ENHANCEMENT_VALIDATION_USER = """
+You have been given an enhanced product image (background removed, lighting improved).
+
+Validate that:
+1. The product is clearly visible and centered
+2. Background is clean white or transparent
+3. No artifacts or distortions around product edges
+4. Product details are sharp and clear
+
+Respond ONLY with valid JSON:
+{
+  "quality_score": 0-100,
+  "background_clean": true | false,
+  "product_visible": true | false,
+  "issues": ["list of issues in Arabic, or empty array"],
+  "approved_for_upload": true | false
+}
+"""
+```
+
+---
+
+## 5. Catalog Structure Organizer
+### منظّم محتوى الكتالوج — قبل توليد PDF (الميزة 3)
+
+**Trigger:** قبل توليد PDF كتالوج في `catalog_gen` Django App  
+**Output:** يُنظّم المنتجات المختارة في أقسام منطقية
+
+```python
+CATALOG_ORGANIZER_USER = """
+You are a catalog design assistant for Bayt Alebaa, a premium Saudi building materials company.
+
+Selected products for custom catalog:
+{products_json}
+
+Task: Organize these products into a logical catalog structure.
+
+Respond ONLY with valid JSON:
+{
+  "catalog_title_ar": "عنوان الكتالوج بالعربية",
+  "catalog_title_en": "Catalog Title in English",
+  "sections": [
+    {
+      "section_title_ar": "اسم القسم بالعربية",
+      "section_intro_ar": "جملة تعريفية بالعربية (20 كلمة كحد أقصى)",
+      "product_skus": ["SKU1", "SKU2"],
+      "display_layout": "grid_2col | grid_3col | hero_single | comparison"
+    }
+  ],
+  "cover_image_recommendation": "وصف مقترح لصورة الغلاف"
+}
+
+Rules:
+- Group by category when possible
+- Premium products first within each section
+- grid_3col for 3+ similar products
+- hero_single for featured/premium items
+- Return ONLY valid JSON
+"""
+```
+
+---
+
+## 6. Data Completeness Analyzer
+### محلل اكتمال البيانات — لوحة التحليلات (الميزة 5)
+
+**Trigger:** `analytics` Django App — dashboard data endpoint  
+**Required Fields (from document section 3.1):**
+
+```python
+REQUIRED_FIELDS = [
+    "sku",                  # String (Unique) — مرتبط بـ SAP
+    "product_name_ar",      # الاسم بالعربي
+    "product_name_en",      # الاسم بالإنجليزي
+    "category",             # ForeignKey
+    "subcategory",          # ForeignKey
+    "description_ar",       # Text
+    "status",               # نشط / موقوف / منتهي / قيد المراجعة
+    "brand",                # ForeignKey
+    "origin_country",       # بلد المنشأ
+    "inventory_type",       # دوري / منتهي / ستوك
+    "color",                # اللون
+    "ecommerce_url",        # رابط المتجر الإلكتروني
+    "main_image",           # صورة رئيسية — إلزامية
+    "lifestyle_image",      # صورة ديكورية — للعرض للعملاء
+    "price_sar",            # من SAP
+    "stock_status",         # من SAP
+]
+
+COMPLETENESS_ANALYZER_USER = """
+Analyze product data completeness for Bayt Alebaa's Product Data Center.
+
+Dataset Summary:
+{dataset_summary_json}
+
+Required fields per product:
+{required_fields}
+
+Evaluate each product and the overall dataset quality.
+
+Respond ONLY with valid JSON:
+{
+  "overall_score": 0-100,
+  "total_products": number,
+  "complete_products": number,
+  "critical_gaps": ["most urgent issues in Arabic"],
+  "recommendations": [
+    {
+      "priority": "high | medium | low",
+      "action_ar": "الإجراء المطلوب بالعربية",
+      "affected_count": number,
+      "affected_categories": ["category names"]
+    }
+  ],
+  "category_scores": {
+    "سيراميك": score,
+    "رخام": score,
+    "أدوات صحية": score,
+    "مطابخ": score,
+    "ديكور": score,
+    "مواد مساندة": score
+  },
+  "missing_lifestyle_images_count": number,
+  "missing_main_images_count": number,
+  "missing_sap_data_count": number
+}
+"""
+```
+
+---
+
+## 7. Product Approval Validator
+### مدقق دورة الموافقة — Django App: `approvals`
+
+**Trigger:** عند تقديم طلب إضافة منتج جديد  
+**Flow:** مستخدم يرفع → Gemini يتحقق → مراجع بشري → Super Admin يعتمد → نشر
+
+```python
+APPROVAL_VALIDATOR_USER = """
+A team member has submitted a new product addition request for Bayt Alebaa.
+
+Submitted Data:
+{submitted_product_json}
+
+Existing SKUs in system:
+{existing_skus_list}
+
+Validate the submission against these criteria:
+
+1. Product name is clear and professional (not vague like "منتج جديد" or "test")
+2. Category is correctly assigned based on the description
+3. Dimensions format is valid (e.g., "60×60 سم", "120×60 سم", "40×40 سم")
+4. Description length: 30–150 words if provided
+5. SKU does not duplicate any existing SKU
+6. Inventory type is one of: دوري / ستوك / منتهي
+7. Image appears to be a real product photo (not placeholder, screenshot, or watermarked)
+
+Respond ONLY with valid JSON:
+{
+  "validation_passed": true | false,
+  "score": 0-100,
+  "issues": [
+    {
+      "field": "field_name",
+      "severity": "blocking | warning | suggestion",
+      "message_ar": "رسالة للمستخدم بالعربية"
+    }
+  ],
+  "auto_approve_eligible": true | false,
+  "reviewer_notes_ar": "ملاحظات للمراجع (30 كلمة كحد أقصى)",
+  "suggested_category": "if current category seems wrong",
+  "duplicate_risk": "none | low | high"
+}
+"""
+```
+
+---
+
+## 8. Smart Search Intent + Recommendations
+### البحث الذكي والتوصيات — `products` app search endpoint
+
+**Trigger:** شريط البحث + قسم "منتجات مكملة" في صفحة تفاصيل المنتج  
+
+```python
+SMART_SEARCH_USER = """
+You are a smart product recommendation engine for Bayt Alebaa, a building materials company.
+
+User Query or Viewed Product Context:
+{user_query_or_product_context}
+
+Available Products Summary (max 50 products for context):
+{available_products_json}
+
+Task A — Detect Search Intent:
+Identify what the user is likely looking for based on the query/context.
+
+Task B — Recommend:
+Select up to 6 SKUs from the available list that best match the intent.
+
+Respond ONLY with valid JSON:
+{
+  "detected_intent": {
+    "room_type": "غرفة معيشة | حمام | مطبخ | مدخل | خارجي | null",
+    "style": "كلاسيك | عصري | فاخر | مينيمال | null",
+    "material": "رخام | سيراميك | بورسلان | null",
+    "use_case": "أرضيات | جدران | أسطح | ديكور | null"
+  },
+  "recommended_skus": ["SKU1", "SKU2", "SKU3"],
+  "recommendation_reason_ar": "سبب التوصية بالعربية (15 كلمة كحد أقصى)"
+}
+"""
+```
+
+---
+
+## 9. SAP Data Sync Validation
+### التحقق من بيانات SAP — `integrations` Django App
+
+**Trigger:** Celery Task — يُنفَّذ كل 30 دقيقة (من القسم 9.3 في الوثيقة)  
+**Purpose:** التحقق من صحة البيانات المُجلَبة من SAP قبل حفظها
+
+```python
+SAP_SYNC_VALIDATOR_USER = """
+You are validating product data received from SAP ERP for Bayt Alebaa.
+
+SAP Data Batch:
+{sap_data_json}
+
+Validate each record:
+1. SKU format is valid (not empty, no special characters)
+2. Price is a positive number in SAR
+3. Stock status is a known value: دوري / ستوك / منتهي
+4. No obvious data corruption (null fields that should have values)
+
+Respond ONLY with valid JSON:
+{
+  "valid_records": ["SKU1", "SKU2"],
+  "invalid_records": [
+    {
+      "sku": "SKU_X",
+      "issues": ["issue description"]
+    }
+  ],
+  "sync_recommended": true | false,
+  "summary_ar": "ملخص قصير بالعربية"
+}
+"""
+```
+
+---
+
+## Error Handling | معالجة الأخطاء
+
+```python
+# integrations/gemini_service.py
+
+import google.generativeai as genai
+import json
+import logging
+
+logger = logging.getLogger(__name__)
+
+def call_gemini(prompt: str, config_key: str = "flash", image=None) -> dict | str:
+    """
+    Wrapper for all Gemini API calls.
+    Returns parsed JSON dict for structured prompts, or raw string for text prompts.
+    """
+    try:
+        model = genai.GenerativeModel(GEMINI_CONFIG[config_key]["model"])
+        
+        contents = [image, prompt] if image else [prompt]
+        
+        response = model.generate_content(
+            contents,
+            generation_config={
+                "temperature": GEMINI_CONFIG[config_key]["temperature"],
+                "max_output_tokens": GEMINI_CONFIG[config_key]["max_output_tokens"],
+            }
+        )
+        
+        text = response.text.strip()
+        
+        # Try JSON parse if response looks like JSON
+        if text.startswith("{") or text.startswith("["):
+            # Strip markdown fences if present
+            text = text.replace("```json", "").replace("```", "").strip()
+            try:
+                return json.loads(text)
+            except json.JSONDecodeError:
+                # Retry once with explicit JSON instruction
+                retry_prompt = prompt + "\n\nIMPORTANT: Return ONLY valid JSON. No other text."
+                retry_response = model.generate_content([retry_prompt])
+                retry_text = retry_response.text.strip().replace("```json", "").replace("```", "").strip()
+                return json.loads(retry_text)
+        
+        return text
+        
+    except Exception as e:
+        logger.error(f"Gemini API error for config '{config_key}': {e}")
+        raise
+```
+
+---
+
+## Celery Tasks | مهام Celery
+
+```python
+# integrations/tasks.py
+
+from celery import shared_task
+
+@shared_task(bind=True, max_retries=3)
+def generate_decorative_image_task(self, product_id: int):
+    """
+    Generates AI decorative image for a product.
+    Stores result in Cloudflare R2 under lifestyle/ folder.
+    Marks result as 'pending_review' before publishing.
+    """
+    # 1. Fetch product data
+    # 2. Build prompt using DECORATIVE_IMAGE_USER template
+    # 3. Call image generation API (Stable Diffusion / Midjourney)
+    # 4. Upload result to R2: products/{slug}/{sku}/lifestyle/room_01.jpg
+    # 5. Create ProductImage record with status='pending_review'
+    pass
+
+@shared_task
+def sync_sap_data_task():
+    """
+    Runs every 30 minutes (from document section 9.3).
+    Fetches prices and stock from SAP, validates with Gemini, saves to DB.
+    """
+    pass
+
+@shared_task  
+def analyze_completeness_task():
+    """
+    Runs daily. Updates analytics dashboard data.
+    Triggers alerts for categories with low completeness scores.
+    """
+    pass
+```
+
+---
+
+## Dynamic Attributes Reference | السمات الديناميكية
+
+للاستخدام في برومتات الـ AI — من وثيقة المشروع (القسم 3.2):
+
+```python
+CATEGORY_ATTRIBUTES = {
+    "سيراميك": ["المقاس", "نوع السطح", "معدل الامتصاص", "مقاومة الانزلاق (R-Value)", 
+                "مكان الاستخدام", "السماكة (ملم)", "الكمية بالصندوق (م²)", 
+                "معدل الخدش (PEI)", "اللون الأساسي", "الفئة الجمالية"],
+    
+    "رخام": ["النوع", "المنشأ الجغرافي", "اللون والتشكيل", "السماكة (سم)", 
+             "الإنتاج", "معالجة السطح", "مكان الاستخدام"],
+    
+    "أدوات صحية": ["نوع المنتج", "المادة", "أسلوب التركيب", "الشكل", 
+                   "تقنية التوفير (ل/دورة)", "الأبعاد (سم)", "اللون", "شهادات المطابقة"],
+    
+    "مطابخ": ["نوع الخزانة", "مادة الهيكل", "نوع الواجهة", "نظام الفتح", 
+              "سطح العمل", "الأبعاد القياسية", "مستوى الجودة"],
+    
+    "ديكور": ["الفئة الديكورية", "الأسلوب التصميمي", "المادة الرئيسية", 
+              "الألوان المتاحة", "مكان الاستخدام", "الأبعاد"],
+    
+    "مواد مساندة": []  # general fields only
+}
+```
+
+---
+
+*تاريخ الإعداد: فبراير 2025 | إدارة تقنية المعلومات — قسم التطوير والتحول الرقمي | شركة بيت الإباء*

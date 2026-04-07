@@ -1,0 +1,10 @@
+Update styling to use correct color variables across the interface
+
+Corrects CSS variable names in `DecorativeGeneratorPage.css` to match the project's design system, ensuring proper rendering of elements such as buttons, text, and borders.
+
+Replit-Commit-Author: Agent
+Replit-Commit-Session-Id: 8fea81db-d3be-44b4-8946-3ad2e59f532b
+Replit-Commit-Checkpoint-Type: full_checkpoint
+Replit-Commit-Event-Id: 641531ae-f548-4b2b-b50c-ec3bb5dd7d95
+Replit-Commit-Screenshot-Url: https://storage.googleapis.com/screenshot-production-us-central1/1baea5eb-9ea3-49a1-a797-514420bef7ee/8fea81db-d3be-44b4-8946-3ad2e59f532b/CQYhhlf
+Replit-Helium-Checkpoint-Created: true

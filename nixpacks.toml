@@ -1,0 +1,16 @@
+[phases.setup]
+nixPkgs = ["python312", "nodejs_20", "postgresql"]
+
+[phases.install]
+cmds = [
+    "cd data_center/pdc_frontend && npm install",
+    "cd data_center/pdc_backend && pip install -r requirements.txt"
+]
+
+[phases.build]
+cmds = [
+    "cd data_center/pdc_frontend && npm run build"
+]
+
+[start]
+cmd = "cd data_center/pdc_backend && python manage.py migrate --noinput && python manage.py collectstatic --noinput && gunicorn pdc_backend.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"

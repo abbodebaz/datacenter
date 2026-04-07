@@ -1,4 +1,5 @@
 [build]
+builder = "NIXPACKS"
 buildCommand = "cd data_center/pdc_frontend && npm install && npm run build && cd ../pdc_backend && pip install -r requirements.txt"
 
 [deploy]

@@ -2,8 +2,11 @@ services:
   - type: web
     name: bayt-alebaa-pdc
     runtime: python
-    buildCommand: |
-      cd data_center/pdc_frontend && npm install && npm run build && cd ../pdc_backend && pip install -r requirements.txt
+    pythonVersion: "3.11"
+    buildCommand: >
+      pip install --upgrade pip &&
+      pip install -r data_center/pdc_backend/requirements.txt &&
+      cd data_center/pdc_frontend && npm install && npm run build
     startCommand: >
       cd data_center/pdc_backend &&
       python manage.py migrate --noinput &&

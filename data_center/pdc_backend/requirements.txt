@@ -29,7 +29,7 @@ reportlab==4.1.0
 weasyprint==61.2
 
 # Image Processing
-Pillow==10.3.0
+Pillow>=10.4.0,<12.0.0
 # rembg==2.0.57  # Optional: requires separate installation in production.
 #                # In production, the Remove.bg API is used as a fallback
 #                # if rembg is not installed. To use rembg locally, install

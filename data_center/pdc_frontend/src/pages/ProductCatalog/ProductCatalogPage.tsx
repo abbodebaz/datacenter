@@ -3,7 +3,7 @@
  * Dark full-width masonry layout + collapsible filter panel
  */
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { Search, LogIn, LayoutGrid, SlidersHorizontal, X, ChevronDown, Sun, Moon, BookOpen } from 'lucide-react'
@@ -112,7 +112,7 @@ export default function ProductCatalogPage() {
         !isAr && c.name_en ? c.name_en : c.name_ar
 
     /* ── Core state ── */
-    const [filters, setFilters] = useState<ProductFilters>({ page: 1, page_size: 24 })
+    const [filters, setFilters] = useState<ProductFilters>({ page_size: 24 })
     const [search, setSearch] = useState('')
     const [searchFocused, setSearchFocused] = useState(false)
     const [hoveredId, setHoveredId] = useState<number | null>(null)
@@ -172,10 +172,38 @@ export default function ProductCatalogPage() {
 
 
     /* ── Queries ── */
-    const { data, isLoading } = useQuery({
+    const {
+        data: infiniteData,
+        isLoading,
+        isFetchingNextPage,
+        hasNextPage,
+        fetchNextPage,
+    } = useInfiniteQuery({
         queryKey: ['products', filters, search],
-        queryFn: () => productsAPI.list({ ...filters, search }).then(r => r.data),
+        queryFn: ({ pageParam = 1 }) =>
+            productsAPI.list({ ...filters, page: pageParam, search }).then(r => r.data),
+        getNextPageParam: (lastPage: { next: string | null; count: number }, allPages: unknown[]) => {
+            if (!lastPage.next) return undefined
+            return allPages.length + 1
+        },
+        initialPageParam: 1,
     })
+    const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+    useEffect(() => {
+        const el = loadMoreRef.current
+        if (!el) return
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage()
+                }
+            },
+            { threshold: 0.1 },
+        )
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
     const { data: categoriesData } = useQuery({
         queryKey: ['categories-flat'],
@@ -192,8 +220,8 @@ export default function ProductCatalogPage() {
     const categories: CategoryFlat[] = allCats.filter((c: CategoryFlat) => c.level === 1)
     const childrenOf = (parentId: number): CategoryFlat[] => allCats.filter((c: CategoryFlat) => c.parent === parentId)
     const brands: Brand[] = brandsData?.results ?? []
-    const products: Product[] = data?.results ?? []
-    const totalCount = data?.count ?? 0
+    const products: Product[] = infiniteData?.pages?.flatMap((p: any) => p.results ?? []) ?? []
+    const totalCount = (infiniteData?.pages?.[0] as any)?.count ?? 0
 
     /* ── Derived: unique colors & countries from current products ── */
     const allColors   = [...new Set(products.map(p => p.color).filter(Boolean))]
@@ -1027,50 +1055,35 @@ export default function ProductCatalogPage() {
             </div>
 
             {/* ══════════════════════════════════════════
-                PAGINATION
+                INFINITE SCROLL SENTINEL
             ══════════════════════════════════════════ */}
-            {data && data.count > (filters.page_size ?? 24) && (
+            <div ref={loadMoreRef} style={{ height: 1 }} />
+            {isFetchingNextPage && (
                 <div style={{
                     display: 'flex', justifyContent: 'center',
                     alignItems: 'center', gap: 10,
-                    padding: '0 0 60px',
+                    padding: '24px 0 40px',
                 }}>
-                    <button
-                        disabled={!data.previous}
-                        onClick={() => setFilters(f => ({ ...f, page: (f.page ?? 1) - 1 }))}
-                        style={{
-                            padding: '9px 22px',
-                            background: 'transparent',
-                            border: '1px solid var(--color-border-strong)',
-                            borderRadius: 8,
-                            color: data.previous ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                            cursor: data.previous ? 'pointer' : 'not-allowed',
-                            fontFamily: 'inherit', fontSize: 13,
-                        }}
-                    >
-                        {t('pagination.prev')}
-                    </button>
-                    <span style={{ padding: '9px 16px',
-                        color: 'var(--color-text-muted)',
-                        fontSize: 13,
-                    }}>
-                        {filters.page ?? 1}
+                    <div style={{
+                        width: 28, height: 28,
+                        border: '3px solid var(--color-border-strong)',
+                        borderTopColor: 'var(--color-gold)',
+                        borderRadius: '50%',
+                        animation: 'spin 0.8s linear infinite',
+                    }} />
+                    <span style={{ color: 'var(--color-text-muted)', fontSize: 13 }}>
+                        {t('products.loading', 'جاري تحميل المزيد...')}
                     </span>
-                    <button
-                        disabled={!data.next}
-                        onClick={() => setFilters(f => ({ ...f, page: (f.page ?? 1) + 1 }))}
-                        style={{
-                            padding: '9px 22px',
-                            background: 'transparent',
-                            border: '1px solid var(--color-border-strong)',
-                            borderRadius: 8,
-                            color: data.next ? 'var(--color-text-primary)' : 'var(--color-text-muted)',
-                            cursor: data.next ? 'pointer' : 'not-allowed',
-                            fontFamily: 'inherit', fontSize: 13,
-                        }}
-                    >
-                        {t('pagination.next')}
-                    </button>
+                </div>
+            )}
+            {!hasNextPage && products.length > 0 && (
+                <div style={{
+                    textAlign: 'center',
+                    padding: '24px 0 40px',
+                    color: 'var(--color-text-muted)',
+                    fontSize: 13,
+                }}>
+                    {t('products.allLoaded', `تم عرض جميع المنتجات (${totalCount})`)}
                 </div>
             )}
 
